@@ -423,9 +423,10 @@
     #mback {
       position:absolute; inset:0; background:rgba(4,3,2,.96);
       backdrop-filter:blur(12px); cursor:pointer;
+      z-index: 1;
     }
     #mbox {
-      position:relative; z-index:1; width:100%; max-width:1120px;
+      position:relative; z-index:2; width:100%; max-width:1120px;
       background:var(--s1); border:1px solid var(--bord2);
       box-shadow:0 40px 100px rgba(0,0,0,.7);
       transform:scale(.95) translateY(18px); transition:transform .45s var(--ease);
@@ -552,6 +553,13 @@
       .fphrase { font-size: .95rem; }
     }
 
+    /* Hide cursor and grain overlays when modal is open to prevent touch event blocking on mobile iframes */
+    body.lock #cdot,
+    body.lock #cring,
+    body.lock #grain {
+      display: none !important;
+    }
+
     /* Small Mobiles (max-width: 640px) */
     @media (max-width: 640px) {
       .hnames { flex-direction: column; gap: .1rem; }
@@ -572,6 +580,33 @@
       #mhead { padding: .7rem 1rem; }
       #mlabel { font-size: .72rem; }
       #mclose { width: 28px; height: 28px; font-size: .7rem; }
+    }
+
+    /* Mobile Landscape Optimizations (when screen height is very small) */
+    @media (max-height: 480px) and (orientation: landscape) {
+      #modal {
+        padding: 0.2rem;
+        align-items: center;
+      }
+      #mbox {
+        width: 100%;
+        max-width: 130vh; /* Scaled width relative to height for optimal 16:9 viewing */
+        margin: 0 auto;
+      }
+      #mhead {
+        padding: 0.3rem 0.6rem;
+      }
+      #mlabel {
+        font-size: 0.7rem;
+      }
+      #mclose {
+        width: 22px;
+        height: 22px;
+        font-size: 0.6rem;
+      }
+      #mbody {
+        padding-bottom: 56.25%; /* Keeps correct video aspect ratio */
+      }
     }
   </style>
 </head>
