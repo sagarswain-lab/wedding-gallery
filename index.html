@@ -826,7 +826,7 @@
           <span class="vtag">VIDEO</span>
           <span class="vname">${name}</span>
         </div>`;
-      if(id) card.addEventListener('click',()=>openModal(id,'video',name));
+      if(id) card.addEventListener('click',()=>window.open(v.link, '_blank'));
       else   card.style.cursor='default';
       grid.appendChild(card);
       revObs.observe(card);
