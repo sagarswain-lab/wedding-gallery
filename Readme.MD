@@ -211,7 +211,7 @@ https://github.com/YOUR_USERNAME/wedding-gallery
 
 **7.** A green banner appears with your live URL:
 ```
-https://YOUR_USERNAME.github.io/wedding-gallery/
+https://sagarswain-lab.github.io/wedding-gallery/
 ```
 
 **8.** 🎉 Share this URL with family and friends!
