@@ -1180,24 +1180,72 @@
       transform: scale(1) translateY(0);
     }
 
-    /* Mobile: full-screen centered */
-    @media (max-width: 600px) {
+    /* Mobile: full-screen */
+    @media (max-width: 767px) {
       #modal {
         align-items: center;
         justify-content: center;
-        padding: .75rem;
+        padding: .5rem;
       }
 
       #mbox {
         max-width: 100%;
-        border-radius: 8px;
-        transform: scale(.95) translateY(16px);
-        max-height: calc(100svh - 1.5rem);
+        width: 100%;
+        border-radius: 10px;
+        transform: translateY(20px) scale(.97);
+        /* Defined height so flex:1 on #mbody works */
+        height: calc(100svh - 1rem);
+        max-height: calc(100svh - 1rem);
       }
 
       #modal.open #mbox {
-        transform: scale(1) translateY(0);
+        transform: translateY(0) scale(1);
       }
+    }
+
+    /* ── Fullscreen mode: video fills entire screen ── */
+    #modal:fullscreen,
+    #modal:-webkit-full-screen,
+    #modal:-moz-full-screen {
+      padding: 0;
+      background: #000;
+    }
+
+    #modal:fullscreen #mback,
+    #modal:-webkit-full-screen #mback,
+    #modal:-moz-full-screen #mback {
+      background: #000;
+      backdrop-filter: none;
+    }
+
+    #modal:fullscreen #mbox,
+    #modal:-webkit-full-screen #mbox,
+    #modal:-moz-full-screen #mbox {
+      max-width: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      border: none !important;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    #modal:fullscreen #mhead,
+    #modal:-webkit-full-screen #mhead,
+    #modal:-moz-full-screen #mhead {
+      background: rgba(7,6,4,.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #modal:fullscreen #mbody,
+    #modal:-webkit-full-screen #mbody,
+    #modal:-moz-full-screen #mbody {
+      padding-bottom: 0 !important;
+      height: 0 !important;
+      flex: 1 !important;
+      min-height: 0 !important;
     }
 
     #mhead {
@@ -1260,13 +1308,13 @@
       min-height: 0;
     }
 
-    /* On mobile, use actual viewport-based height instead of % trick */
-    @media (max-width: 600px) {
+    /* On mobile: remove padding trick — flex:1 fills space because #mbox has defined height */
+    @media (max-width: 767px) {
       #mbody {
         padding-bottom: 0;
-        height: 56.25vw;
-        flex: none;
-        flex-shrink: 0;
+        height: 0;   /* flex:1 stretches this */
+        flex: 1;
+        min-height: 0;
       }
     }
 
@@ -1295,11 +1343,11 @@
     #mbody.photo-mode {
       padding-bottom: 0;
       height: auto;
+      flex: 1;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      max-height: calc(90vh - 60px);
-      max-height: calc(90svh - 60px);
       overflow: hidden;
     }
 
@@ -1310,9 +1358,8 @@
     #mimg {
       display: none;
       max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
-      max-height: calc(90vh - 60px);
-      max-height: calc(90svh - 60px);
     }
 
     #mbody.photo-mode #mimg {
@@ -1623,6 +1670,7 @@
     }
 
     /* ════════════════════════════════════════
+    /* ════════════════════════════════════════
        MODAL
     ════════════════════════════════════════ */
     const modal = document.getElementById('modal');
@@ -1631,7 +1679,35 @@
     const mbody = document.getElementById('mbody');
     const mlabel = document.getElementById('mlabel');
 
+    /* ── Fullscreen helpers ── */
+    function enterFullscreen(el) {
+      try {
+        if (el.requestFullscreen)            el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+        else if (el.msRequestFullscreen)     el.msRequestFullscreen();
+      } catch(e) {}
+    }
+
+    function exitFullscreen() {
+      try {
+        if      (document.exitFullscreen)           document.exitFullscreen();
+        else if (document.webkitExitFullscreen)     document.webkitExitFullscreen();
+        else if (document.mozCancelFullScreen)      document.mozCancelFullScreen();
+        else if (document.msExitFullscreen)         document.msExitFullscreen();
+      } catch(e) {}
+    }
+
+    function isFullscreen() {
+      return !!(document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement);
+    }
+
+    let _isVideoModal = false;
+
     function openModal(id, type, name) {
+      _isVideoModal = (type === 'video');
       mlabel.textContent = name;
       if (type === 'photo') {
         mbody.classList.add('photo-mode');
@@ -1639,30 +1715,47 @@
         mframe.src = '';
       } else {
         mbody.classList.remove('photo-mode');
-        mframe.src = `https://drive.google.com/file/d/${id}/preview?rm=minimal`;
+        /* Full Google Drive player — includes quality (⚙) controls */
+        mframe.src = `https://drive.google.com/file/d/${id}/preview`;
         mimg.src = '';
       }
       modal.classList.add('open');
       document.body.classList.add('lock');
       document.getElementById('mclose').focus();
+
+      /* Auto-fullscreen for videos */
+      if (type === 'video') {
+        enterFullscreen(modal);
+      }
     }
 
     function closeModal() {
       modal.classList.remove('open');
       document.body.classList.remove('lock');
-      setTimeout(() => { mframe.src = ''; mimg.src = ''; }, 400);
+      setTimeout(() => { mframe.src = ''; mimg.src = ''; mbody.classList.remove('photo-mode'); }, 400);
+      if (isFullscreen()) exitFullscreen();
     }
 
     document.getElementById('mclose').addEventListener('click', closeModal);
     document.getElementById('mback').addEventListener('click', closeModal);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !isFullscreen()) closeModal(); });
 
-    /* Swipe down to close on mobile */
+    /* Close modal when user exits fullscreen via browser/device button */
+    function onFullscreenChange() {
+      if (!isFullscreen() && _isVideoModal && modal.classList.contains('open')) {
+        closeModal();
+      }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange);
+
+    /* Swipe down to close on mobile (non-fullscreen) */
     let touchStartY = 0;
     const mbox = document.getElementById('mbox');
     mbox.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
     mbox.addEventListener('touchend', e => {
-      if (e.changedTouches[0].clientY - touchStartY > 80) closeModal();
+      if (!isFullscreen() && e.changedTouches[0].clientY - touchStartY > 80) closeModal();
     }, { passive: true });
 
     /* ════════════════════════════════════════
