@@ -1180,25 +1180,23 @@
       transform: scale(1) translateY(0);
     }
 
-    /* Mobile: slides up from bottom */
+    /* Mobile: full-screen centered */
     @media (max-width: 600px) {
       #modal {
-        align-items: flex-end;
-        padding: 0;
+        align-items: center;
+        justify-content: center;
+        padding: .75rem;
       }
 
       #mbox {
         max-width: 100%;
-        border-radius: 12px 12px 0 0;
-        border-left: none;
-        border-right: none;
-        border-bottom: none;
-        transform: translateY(40px);
-        padding-bottom: var(--sab);
+        border-radius: 8px;
+        transform: scale(.95) translateY(16px);
+        max-height: calc(100svh - 1.5rem);
       }
 
       #modal.open #mbox {
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
       }
     }
 
@@ -1259,6 +1257,17 @@
       height: 0;
       flex: 1;
       overflow: hidden;
+      min-height: 0;
+    }
+
+    /* On mobile, use actual viewport-based height instead of % trick */
+    @media (max-width: 600px) {
+      #mbody {
+        padding-bottom: 0;
+        height: 56.25vw;
+        flex: none;
+        flex-shrink: 0;
+      }
     }
 
     #mframe {
@@ -1268,6 +1277,18 @@
       height: 100%;
       border: none;
       background: var(--bg);
+    }
+
+    /* Blocks the Google Drive timeline/scrubber bar */
+    #mframe-cover {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      z-index: 2;
+      pointer-events: all;
+      background: transparent;
     }
 
     /* Photo mode */
@@ -1428,7 +1449,8 @@
         <button id="mclose" aria-label="Close">✕</button>
       </div>
       <div id="mbody">
-        <iframe id="mframe" allowfullscreen allow="autoplay"></iframe>
+        <iframe id="mframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+        <div id="mframe-cover"></div>
         <img id="mimg" alt="Wedding photo">
       </div>
     </div>
@@ -1617,7 +1639,7 @@
         mframe.src = '';
       } else {
         mbody.classList.remove('photo-mode');
-        mframe.src = `https://drive.google.com/file/d/${id}/preview`;
+        mframe.src = `https://drive.google.com/file/d/${id}/preview?rm=minimal`;
         mimg.src = '';
       }
       modal.classList.add('open');
